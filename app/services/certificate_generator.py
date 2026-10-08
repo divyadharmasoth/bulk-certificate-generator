@@ -1,4 +1,6 @@
 from pathlib import Path
+import re
+import uuid
 
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -10,25 +12,35 @@ def generate_certificate(
     event_date: str,
     job_id: int
 ):
-    # Create folder for this job
-    output_directory = Path(
-        "generated_certificates"
-    ) / f"job_{job_id}"
+    # Create a separate folder for each generation job
+    output_directory = (
+        Path("generated_certificates")
+        / f"job_{job_id}"
+    )
 
     output_directory.mkdir(
         parents=True,
         exist_ok=True
     )
 
-    # Create a safe filename
-    safe_name = recipient_name.replace(" ", "_")
+    # Create a safe and unique filename
+    safe_name = re.sub(
+        r"[^A-Za-z0-9_-]+",
+        "_",
+        recipient_name
+    ).strip("_")
+
+    if not safe_name:
+        safe_name = "certificate"
+
+    unique_id = uuid.uuid4().hex[:8]
 
     file_path = (
-        output_directory /
-        f"{safe_name}.pdf"
+        output_directory
+        / f"{safe_name}_{unique_id}.pdf"
     )
 
-    # Create PDF
+    # Create PDF certificate
     pdf = canvas.Canvas(
         str(file_path),
         pagesize=A4
@@ -36,8 +48,12 @@ def generate_certificate(
 
     width, height = A4
 
-    # Title
-    pdf.setFont("Helvetica-Bold", 28)
+    # Certificate title
+    pdf.setFont(
+        "Helvetica-Bold",
+        28
+    )
+
     pdf.drawCentredString(
         width / 2,
         height - 150,
@@ -45,7 +61,11 @@ def generate_certificate(
     )
 
     # Main text
-    pdf.setFont("Helvetica", 16)
+    pdf.setFont(
+        "Helvetica",
+        16
+    )
+
     pdf.drawCentredString(
         width / 2,
         height - 230,
@@ -53,7 +73,11 @@ def generate_certificate(
     )
 
     # Recipient name
-    pdf.setFont("Helvetica-Bold", 24)
+    pdf.setFont(
+        "Helvetica-Bold",
+        24
+    )
+
     pdf.drawCentredString(
         width / 2,
         height - 280,
@@ -61,29 +85,41 @@ def generate_certificate(
     )
 
     # Event information
-    pdf.setFont("Helvetica", 16)
+    pdf.setFont(
+        "Helvetica",
+        16
+    )
+
     pdf.drawCentredString(
         width / 2,
         height - 340,
         "has successfully participated in"
     )
 
-    pdf.setFont("Helvetica-Bold", 20)
+    pdf.setFont(
+        "Helvetica-Bold",
+        20
+    )
+
     pdf.drawCentredString(
         width / 2,
         height - 390,
         event_name
     )
 
-    # Date
-    pdf.setFont("Helvetica", 14)
+    # Event date
+    pdf.setFont(
+        "Helvetica",
+        14
+    )
+
     pdf.drawCentredString(
         width / 2,
         height - 450,
         f"Date: {event_date}"
     )
 
-    # Signature
+    # Signature line
     pdf.line(
         width / 2 - 60,
         150,
@@ -91,13 +127,18 @@ def generate_certificate(
         150
     )
 
-    pdf.setFont("Helvetica", 12)
+    pdf.setFont(
+        "Helvetica",
+        12
+    )
+
     pdf.drawCentredString(
         width / 2,
         130,
         "Authorized Signature"
     )
 
+    # Save PDF
     pdf.save()
 
     return str(file_path)

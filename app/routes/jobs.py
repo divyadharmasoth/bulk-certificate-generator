@@ -96,9 +96,10 @@ def get_job(
     job = db.query(Job).filter(Job.id == job_id).first()
 
     if not job:
-        return {
-            "error": "Job not found"
-        }
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+        )
 
     return {
         "job_id": job.id,
@@ -117,9 +118,11 @@ def get_job_certificates(
     job = db.query(Job).filter(Job.id == job_id).first()
 
     if not job:
-        return {
-            "error": "Job not found"
-        }
+
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+    )
 
     certificates = (
         db.query(Certificate)
